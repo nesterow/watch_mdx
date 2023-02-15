@@ -13,7 +13,7 @@ function _createMdxContent(props) {
     <>
       <_components.h1>{"Test mdx"}</_components.h1>
       {"\n"}
-      <MyComponent hello={"test test"} />
+      <MyComponent hello={"test"} />
     </>
   );
 }
