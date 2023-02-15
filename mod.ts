@@ -24,6 +24,7 @@ interface WatcherOptions {
   formatOutput: (input: string) => string;
   denoFormat?: boolean;
   precompile?: boolean;
+  onCompile?: (files: string[]) => Promise<void>;
 }
 
 type CompilerCallback = (options: CompileOptions) => Promise<CompileResult>;
@@ -112,7 +113,7 @@ export async function watchMdx(
   options: Partial<WatcherOptions> = defaultMdxWatcherOptions,
 ) {
   options = { ...defaultMdxWatcherOptions, ...options };
-  const { dir, pattern, compile, formatOutput, denoFormat } =
+  const { dir, pattern, compile, formatOutput, denoFormat, onCompile } =
     options as WatcherOptions;
 
   if (options.precompile) {
@@ -122,6 +123,7 @@ export async function watchMdx(
       for (const file of precompiled) {
         await denoFmt(file);
       }
+      await onCompile?.(precompiled);
     }
   }
 
@@ -139,6 +141,7 @@ export async function watchMdx(
           await Deno.remove(output);
           continue;
         }
+
         if (event.kind === "create" || event.kind === "modify") {
           const output = formatOutput(path);
           console.log(`%cCompiling ${path} to ${output}`, "color: green");
@@ -153,11 +156,14 @@ export async function watchMdx(
           await Deno.writeTextFile(result.output, result.value);
           if (denoFormat) {
             await denoFmt(result.output);
+            await onCompile?.([result.output]);
           }
         }
       } catch (e) {
-        console.log(`%cError compiling ${path}`, "color: red");
-        console.error(e);
+        if (e instanceof Deno.errors.NotFound) {
+          console.log(`%cRemoving ${path}`, "color: yellow");
+          await Deno.remove(formatMdxOutput(path)).catch(() => {});
+        }
         continue;
       }
     }
