@@ -5,7 +5,7 @@ Compile MDX to `*.jsx` components on fly.
 ## Usage
 
 ```typescript
-import { watchMdx } from "https://deno.land/x/mdx_watcher/mod.ts";
+import { watchMdx } from "https://deno.land/x/watch_mdx/mod.ts";
 
 watchMdx({
   compile: async ({ compile, source, output }) => {
