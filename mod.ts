@@ -60,29 +60,33 @@ export async function watchMdx(
 
   const { dir, pattern, compile, formatOutput } = options as WatcherOptions;
   const watcher = Deno.watchFs(dir, { recursive: true });
-
+  console.log(`%cStarted MDX watcher for ${Deno.cwd()}`, "color: green");
   for await (const event of watcher) {
     if (event.kind === "access") continue;
     for (const path of event.paths) {
       if (!path.match(pattern)) continue;
-      if (event.kind === "remove") {
-        const output = formatOutput(path);
-        console.log(`%cRemoving ${output}`, "color: yellow");
-        await Deno.remove(output);
+      try {
+        if (event.kind === "remove") {
+          const output = formatOutput(path);
+          console.log(`%cRemoving ${output}`, "color: yellow");
+          await Deno.remove(output);
+          continue;
+        }
+        if (event.kind === "create" || event.kind === "modify") {
+          const output = formatOutput(path);
+          console.log(`%cCompiling ${path} to ${output}`, "color: green");
+          const result = await compile({
+            compile: compiler,
+            source: {
+              value: await Deno.readTextFile(path),
+              path,
+            },
+            output,
+          });
+          await Deno.writeTextFile(result.output, result.value);
+        }
+      } catch (_) {
         continue;
-      }
-      if (event.kind === "create" || event.kind === "modify") {
-        const output = formatOutput(path);
-        console.log(`%cCompiling ${path} to ${output}`, "color: green");
-        const result = await compile({
-          compile: compiler,
-          source: {
-            value: await Deno.readTextFile(path),
-            path,
-          },
-          output,
-        });
-        await Deno.writeTextFile(result.output, result.value);
       }
     }
   }
