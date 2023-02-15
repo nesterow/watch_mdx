@@ -1,4 +1,4 @@
-# MDX Watcher
+# Watch MDX
 
 Compile MDX to `*.jsx` components on fly.
 
