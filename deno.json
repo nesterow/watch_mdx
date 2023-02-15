@@ -1,0 +1,11 @@
+{
+  "tasks": {
+    "test": "deno test -A --no-check  tests/"
+  },
+  "importMap": "./import_map.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "strict": true
+  }
+}
