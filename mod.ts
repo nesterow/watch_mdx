@@ -117,14 +117,8 @@ export async function watchMdx(
     options as WatcherOptions;
 
   if (options.precompile) {
-    const files = collectFiles(dir, pattern);
-    const precompiled = await precompile(files, compile);
-    if (denoFormat) {
-      for (const file of precompiled) {
-        await denoFmt(file);
-      }
-      await onCompile?.(precompiled);
-    }
+    const precompiled = await compileMdx(options);
+    await onCompile?.(precompiled);
   }
 
   const watcher = Deno.watchFs(dir, { recursive: true });
@@ -168,4 +162,19 @@ export async function watchMdx(
       }
     }
   }
+}
+
+export async function compileMdx(
+  options: Partial<WatcherOptions> = defaultMdxWatcherOptions,
+) {
+  options = { ...defaultMdxWatcherOptions, ...options };
+  const { dir, pattern, compile } = options as WatcherOptions;
+  const files = collectFiles(dir, pattern);
+  const result = await precompile(files, compile);
+  if (options.denoFormat) {
+    for (const file of result) {
+      await denoFmt(file);
+    }
+  }
+  return result;
 }
